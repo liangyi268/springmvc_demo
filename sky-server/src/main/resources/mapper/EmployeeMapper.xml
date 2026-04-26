@@ -33,6 +33,7 @@
                 update_user = #{updateUser},
             </if>
         </set>
+        where id = #{id}
     </update>
     <select id="page" resultType="com.sky.entity.Employee">
         select * from employee
