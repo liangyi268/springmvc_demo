@@ -57,4 +57,42 @@ public class CategoryController {
         categoryService.startOrStop(status,id);
         return Result.success();
     }
+
+    /**
+     * 修改分类
+     * @param categoryDTO
+     * @return
+     */
+    @PutMapping
+    @ApiOperation("修改分类")
+    public Result update(@RequestBody CategoryDTO categoryDTO){
+        log.info("修改分类信息");
+        categoryService.update(categoryDTO);
+        return Result.success();
+    }
+
+    /**
+     * 删除分类
+     * @param id
+     * @return
+     */
+    @DeleteMapping
+    @ApiOperation("删除分类")
+    public Result delete(Long id){
+        categoryService.delete(id);
+        return Result.success();
+    }
+    /**
+     * 查询分类
+     * @param type
+     * @return
+     */
+    @GetMapping("/list")
+    @ApiOperation("查询分类")
+    public Result<Category> list(Integer type){
+        log.info("查询分类");
+        Category category = categoryService.list(type);
+        return Result.success(category);
+    }
+
 }
