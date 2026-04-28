@@ -7,13 +7,13 @@
         select * from category
         <where>
             <if test="name != null and name != ''">
-                and name like concat('%',#{name},'%')
+                and name like concat('%', #{name, jdbcType=VARCHAR}, '%')
             </if>
             <if test="type != null">
-                and type = #{type}
+                and type = #{type, jdbcType=INTEGER}
             </if>
         </where>
-        order by sort asc , create_time desc
+        order by sort asc, create_time desc
     </select>
 
     <update id="update" parameterType="Category">
