@@ -8,6 +8,6 @@ sky:
     password: 123456
   alioss:
     endpoint: oss-cn-beijing.aliyuncs.com
-    access-key-id: LTAI5t725pPs1uFQnQ8BVgtG
-    access-key-secret: 4rcQNgTNPi0XcvWkA93kmuM6hVeDip
+    access-key-id: ${ALIYUN_ACCESS_KEY_ID}
+    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET}
     bucket-name: java-ai21321
