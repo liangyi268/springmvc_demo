@@ -6,6 +6,8 @@ import com.sky.entity.Category;
 import com.sky.result.PageResult;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 public interface CategoryService {
 
@@ -19,7 +21,7 @@ public interface CategoryService {
 
     void delete(Long id);
 
-    Category list(Integer type);
+    List<Category> list(Integer type);
 
 //    PageResult list(Integer );
 }

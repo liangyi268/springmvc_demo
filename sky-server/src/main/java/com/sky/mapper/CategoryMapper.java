@@ -10,6 +10,8 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 @Mapper
 public interface CategoryMapper {
     @AutoFill(value = OperationType.INSERT)
@@ -22,7 +24,7 @@ public interface CategoryMapper {
     @AutoFill(value = OperationType.UPDATE)
     void update(Category category);
 //    @Select("SELECT * from sky_take_out.category where type=#{type}")
-    Category list(Integer type);
+    List<Category> list(Integer type);
     @Delete("DELETE from category where id=#{id}")
     void delete(Long id);
 }
