@@ -8,6 +8,7 @@ import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
 import com.sky.entity.DishFlavor;
+import com.sky.entity.Setmeal;
 import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.DishFlavourMapper;
 import com.sky.mapper.DishMapper;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -43,7 +45,7 @@ public class DishServiceImpl implements DishService {
         Long dishId = dish.getId();
         //向口味表插入n条数据
         List<DishFlavor> flavors = dishDTO.getFlavors();
-        if(flavors != null && flavors.size() > 0){
+        if(flavors != null && !flavors.isEmpty()){
             for (DishFlavor flavor : flavors) {
                 flavor.setDishId(dishId);
             }
@@ -94,6 +96,7 @@ public class DishServiceImpl implements DishService {
         return dishVO;
     }
 
+    @Transactional
     @Override
     public void update(DishDTO dishDTO) {
         Dish dish = new Dish();
@@ -110,5 +113,34 @@ public class DishServiceImpl implements DishService {
             //批量插入口味表数据
             dishFlavourMapper.insertBatch(flavors);
         }
+    }
+
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        Dish dish = Dish.builder()
+                .status(status)
+                .id(id)
+                .build();
+        dishMapper.update(dish);
+        if (status.equals(StatusConstant.DISABLE)){
+            List<Long> dishIds = new ArrayList<>();
+            dishIds.add(id);
+            // select setmeal_id from setmeal_dish where dish_id in (?,?,?)
+            List<Long> setmealIds = setmealDishMapper.getSetmealIdsByDishIds(dishIds);
+            if (setmealIds != null && !setmealIds.isEmpty()) {
+                for (Long setmealId : setmealIds) {
+                    Setmeal setmeal = Setmeal.builder()
+                            .id(setmealId)
+                            .status(StatusConstant.DISABLE)
+                            .build();
+
+                }
+            }
+        }
+    }
+
+    @Override
+    public List<DishVO> list(Long categoryId) {
+        return dishMapper.list(categoryId);
     }
 }
