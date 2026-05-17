@@ -22,4 +22,9 @@
             #{dishId}
         </foreach>
     </select>
+    <select id="getDishById" resultType="com.sky.vo.DishItemVO">
+        SELECT sd.name, sd.copies, sd.image, sd.description
+        FROM setmeal_dish sd
+        WHERE sd.setmeal_id = #{id}
+    </select>
 </mapper>

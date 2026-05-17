@@ -2,6 +2,7 @@ package com.sky.service;
 
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
+import com.sky.entity.Dish;
 import com.sky.result.PageResult;
 import com.sky.vo.DishVO;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,5 +23,7 @@ public interface DishService {
 
     void startOrStop(Integer status, Long id);
 
-    List<DishVO> list(Long categoryId);
+    List<DishVO> list(Dish dish);
+
+    List<DishVO> listWithFavour(Dish dish);
 }

@@ -58,6 +58,15 @@
         where d.id = #{id}
     </select>
     <select id="list" resultType="com.sky.vo.DishVO">
-        select * from sky_take_out.dish where category_id=#{categoryId} and status=1
+        select * from sky_take_out.dish
+        <where>
+            <if test="categoryId!=null">
+                and category_id = #{categoryId}
+            </if>
+            <if test="status!=null">
+                and status = #{status}
+            </if>
+        </where>
+        order by update_time desc
     </select>
 </mapper>
