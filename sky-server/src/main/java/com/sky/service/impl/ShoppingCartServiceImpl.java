@@ -42,7 +42,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart);
         log.info("查询结果数量: {}, 结果: {}", list == null ? 0 : list.size(), list);
 
-        if (list != null && list.size() > 0) {
+        if (list != null && !list.isEmpty()) {
             ShoppingCart cart = list.get(0);
             log.info("购物车中已存在该商品，原数量: {}", cart.getNumber());
             cart.setNumber(cart.getNumber() + 1);
@@ -85,6 +85,49 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         }
     }
 
+    @Override
+    public List<ShoppingCart> list() {
+        Long userId = BaseContext.getCurrentId();
+        log.info("查询购物车列表，用户ID: {}", userId);
+        ShoppingCart shoppingCart = ShoppingCart.builder()
+                .userId(userId).build();
+        return shoppingCartMapper.list(shoppingCart);
+    }
 
+    @Override
+    public void clean() {
+        Long userId = BaseContext.getCurrentId();
+        log.info("清空购物车，用户ID: {}", userId);
+        ShoppingCart shoppingCart = ShoppingCart.builder()
+                .userId(userId).build();
+        shoppingCartMapper.delete(shoppingCart);
+    }
+
+    @Override
+    public void sub(ShoppingCartDTO shoppingCartDTO) {
+        Long userId = BaseContext.getCurrentId();
+        log.info("用户ID: {}", userId);
+        ShoppingCart shoppingCart = new ShoppingCart();
+        BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
+        shoppingCart.setUserId(userId);
+        log.info("查询购物车列表，查询条件: {}", shoppingCart);
+        List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart);
+        log.info("查询结果数量: {}, 列表: {}", list == null ? 0 : list.size(), list);
+        if (list != null && !list.isEmpty()) {
+            ShoppingCart cart = list.get(0);
+            log.info("购物车中已存在该商品，原数量: {}", cart.getNumber());
+            if (cart.getNumber() == 1) {
+                log.info("数量为1，从购物车中删除");
+                shoppingCartMapper.delete(cart);
+            } else {
+                log.info("数量大于1，数量减1");
+                cart.setNumber(cart.getNumber() - 1);
+                shoppingCartMapper.updateNumberById(cart);
+            }
+            log.info("更新后数量: {}", cart.getNumber());
+            log.info("删除购物车成功");
+        }
+
+    }
 }
 
