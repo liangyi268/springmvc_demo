@@ -1,52 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sky.mapper.AddressBookMapper">
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO address_book
-            (id, user_id, consignee, sex, phone, province_code, province_name, city_code,
-             city_name, district_code, district_name, detail, label, is_default)
-        VALUES
-            (#{id},#{userId},#{consignee},#{sex},#{phone},#{provinceCode},#{provinceName},
-             #{cityCode},#{cityName},#{districtCode},#{districtName},#{detail},#{label},
-             #{isDefault})
+    <select id="list" parameterType="AddressBook" resultType="AddressBook">
+        select * from address_book
+        <where>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <if test="phone != null">
+                and phone = #{phone}
+            </if>
+            <if test="isDefault != null">
+                and is_default = #{isDefault}
+            </if>
+        </where>
+    </select>
 
-    </insert>
-    <update id="update">
+    <update id="update" parameterType="addressBook">
         update address_book
         <set>
-            <if test="consignee != null and consignee != ''">
+            <if test="consignee != null">
                 consignee = #{consignee},
             </if>
-            <if test="sex != null and sex != ''">
+            <if test="sex != null">
                 sex = #{sex},
             </if>
-            <if test="phone != null and phone != ''">
+            <if test="phone != null">
                 phone = #{phone},
             </if>
-            <if test="provinceCode != null and provinceCode != ''">
-                province_code = #{provinceCode},
-            </if>
-            <if test="provinceName != null and provinceName != ''">
-                province_name = #{provinceName},
-            </if>
-            <if test="cityCode != null and cityCode != ''">
-                city_code = #{cityCode},
-            </if>
-            <if test="cityName != null and cityName != ''">
-                city_name = #{cityName},
-            </if>
-            <if test="districtCode != null and districtCode != ''">
-                district_code = #{districtCode},
-            </if>
-            <if test="districtName != null and districtName != ''">
-                district_name = #{districtName},
-            </if>
-            <if test="detail != null and detail != ''">
+            <if test="detail != null">
                 detail = #{detail},
             </if>
-            <if test="label != null and label != ''">
+            <if test="label != null">
                 label = #{label},
             </if>
             <if test="isDefault != null">
@@ -55,61 +41,5 @@
         </set>
         where id = #{id}
     </update>
-    <update id="updateByUserId">
-        update address_book
-        <set>
-            <if test="consignee != null and consignee != ''">
-                consignee = #{consignee},
-            </if>
-            <if test="sex != null and sex != ''">
-                sex = #{sex},
-            </if>
-            <if test="phone != null and phone != ''">
-                phone = #{phone},
-            </if>
-            <if test="provinceCode != null and provinceCode != ''">
-                province_code = #{provinceCode},
-            </if>
-            <if test="provinceName != null and provinceName != ''">
-                province_name = #{provinceName},
-            </if>
-            <if test="cityCode != null and cityCode != ''">
-                city_code = #{cityCode},
-            </if>
-            <if test="cityName != null and cityName != ''">
-                city_name = #{cityName},
-            </if>
-            <if test="districtCode != null and districtCode != ''">
-                district_code = #{districtCode},
-            </if>
-            <if test="districtName != null and districtName != ''">
-                district_name = #{districtName},
-            </if>
-            <if test="detail != null and detail != ''">
-                detail = #{detail},
-            </if>
-            <if test="label != null and label != ''">
-                label = #{label},
-            </if>
-            <if test="isDefault != null">
-                is_default = #{isDefault},
-            </if>
-        </set>
-        where user_id = #{userId}
-    </update>
 
-    <select id="list" resultType="com.sky.entity.AddressBook">
-        SELECT * from address_book
-        <where>
-            <if test="userId!=null">
-                and user_id=#{userId}
-            </if>
-            <if test="id!=null">
-                and id=#{id}
-            </if>
-            <if test="isDefault!=null">
-                and is_default=#{isDefault}
-            </if>
-        </where>
-    </select>
 </mapper>
