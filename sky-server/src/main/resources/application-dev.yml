@@ -14,6 +14,10 @@ sky:
   wechat:
     appid: wxcbf163f88a7011b9
     secret: 74d19f6d01b7d225d9dc30d21bdeb5d2
+  shop:
+    address: 北京市海淀区上地十街10号        # 商家门店地址
+    baidu-map-ak: QQGDHz1FV3eYyW013KlOj5b0b7XJX0X0          # 百度地图密钥（从环境变量读取）
+
 
   redis:
     host: localhost
