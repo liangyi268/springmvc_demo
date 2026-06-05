@@ -43,10 +43,10 @@ public class OrderController {
      */
     @PutMapping("payment")
     @ApiOperation("模拟支付（跳过真实支付）")
-    public Result payment(@RequestBody OrdersPaymentDTO ordersPaymentDTO) {
+    public Result<OrderPaymentVO> payment(@RequestBody OrdersPaymentDTO ordersPaymentDTO) {
         log.info("模拟支付：{}", ordersPaymentDTO);
-        orderService.payment(ordersPaymentDTO);
-        return Result.success();
+        OrderPaymentVO payment = orderService.payment(ordersPaymentDTO);
+        return Result.success(payment);
     }
 
     /**

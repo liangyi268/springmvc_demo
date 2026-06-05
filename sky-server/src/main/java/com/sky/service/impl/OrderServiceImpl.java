@@ -1,14 +1,13 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.*;
-import com.sky.entity.AddressBook;
-import com.sky.entity.OrderDetail;
-import com.sky.entity.Orders;
-import com.sky.entity.ShoppingCart;
+import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.mapper.*;
@@ -16,9 +15,11 @@ import com.sky.properties.ShopProperties;
 import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.BaiduMapUtil;
+import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -55,6 +54,11 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private BaiduMapUtil baiduMapUtil;      // 调用百度地图
 
+    @Autowired
+    private WebSocketServer webSocketServer;
+
+    @Autowired
+    private UserMapper userMapper;
     // 常量：最大配送距离5000米（5公里）
     private static final int MAX_DELIVERY_DISTANCE = 5000;
 
@@ -148,22 +152,53 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public void payment(OrdersPaymentDTO ordersPaymentDTO) {
-        // 根据订单号查询订单
-        Orders order = orderMapper.getByNumber(ordersPaymentDTO.getOrderNumber());
-        if(order == null){
-            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
-        }
+    public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) {
+        // 当前登录用户id
+        Long userId = BaseContext.getCurrentId();
+        User user = userMapper.getById(userId);
 
-        // 更新订单状态为待接单，支付状态为已支付
-        order.setStatus(Orders.TO_BE_CONFIRMED);
-        order.setPayStatus(Orders.PAID);
-        order.setPayMethod(ordersPaymentDTO.getPayMethod());
-        order.setCheckoutTime(LocalDateTime.now());
-        orderMapper.update(order);
+        //调用微信支付接口，生成预支付交易单
+            /*JSONObject jsonObject = weChatPayUtil.pay(
+                    ordersPaymentDTO.getOrderNumber(), //商户订单号
+                    new BigDecimal(0.01), //支付金额，单位 元
+                    "苍穹外卖订单", //商品描述
+                    user.getOpenid() //微信用户的openid
+            );
+            if (jsonObject.getString("code") != null && jsonObject.getString("code").equals("ORDERPAID")) {
+                throw new OrderBusinessException("该订单已支付");
+            }*/
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("code","ORDERPAID");
+        OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
+        vo.setPackageStr(jsonObject.getString("package"));
+
+        // 为替代微信支付成功后的数据库状态更新，多定义一个方法进行修改
+        Integer OrderPaidStatus = Orders.PAID; // 支付状态，已支付
+        Integer OrderStatus = Orders.TO_BE_CONFIRMED; // 订单状态，待接单
+
+        // 发现没有将支付时间 check_out属性赋值，所以在这里更新
+        LocalDateTime check_out_time = LocalDateTime.now();
+
+        // 获取订单号码
+        String orderNumber = ordersPaymentDTO.getOrderNumber();
+
+        Orders ordersDB = orderMapper.getByNumber(orderNumber);
+        log.info("调用updateStatus，用于替换微信支付更新数据库状态的问题");
+        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, check_out_time, orderNumber);
+
+        //通过WebSocket向客户端浏览器推送消息 type orderId content
+        Map map = new HashMap();
+        map.put("type", 1);  //1表示来单提醒 2表示客户催单
+        map.put("orderId", ordersDB.getId());
+        map.put("content", "订单号：" + orderNumber);
+
+        String json = JSON.toJSONString(map);
+        webSocketServer.sendToAllClient(json);
+
+        return vo;
     }
 
-    // ... existing code ...
     @Override
     public PageResult list(OrdersPageQueryDTO ordersPageQueryDTO) {
         Long currentId = BaseContext.getCurrentId();
@@ -351,6 +386,39 @@ public class OrderServiceImpl implements OrderService {
         orders.setStatus(Orders.COMPLETED);
         log.info("订单完成，订单ID: {}", id);
         orderMapper.update(orders);
+    }
+
+    @Override
+    public void paySuccess(String outTradeNo) {
+        log.info("支付成功回调处理，订单号: {}", outTradeNo);
+
+        // 根据订单号查询订单
+        Orders orders = orderMapper.getByNumber(outTradeNo);
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        // 如果订单已经是支付状态，直接返回（避免重复处理）
+        if (Objects.equals(orders.getPayStatus(), Orders.PAID)) {
+            log.warn("订单已支付，无需重复处理，订单号: {}", outTradeNo);
+            return;
+        }
+
+        // 更新订单状态为待接单，支付状态为已支付
+        orders.setStatus(Orders.TO_BE_CONFIRMED);
+        orders.setPayStatus(Orders.PAID);
+        orders.setCheckoutTime(LocalDateTime.now());
+        orderMapper.update(orders);
+
+        log.info("支付成功处理完成，订单号: {}", outTradeNo);
+        HashMap hashMap = new HashMap();
+        hashMap.put("type",1);//1表示来单提醒2表示客户催单
+        hashMap.put("orderId",orders.getId());
+        hashMap.put("content","订单号:"+orders.getNumber());
+
+        String json = JSON.toJSONString(hashMap);
+        webSocketServer.sendToAllClient(json);
+
     }
 
     private String getOrderDishesString(List<OrderDetail> orderDetailList) {

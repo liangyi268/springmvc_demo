@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <title>WebSocket测试</title>
+</head>
+<body>
+<h1>WebSocket测试页面</h1>
+<button onclick="connect()">连接WebSocket</button>
+<button onclick="disconnect()">断开连接</button>
+<div id="messages"></div>
+
+<script>
+    let ws = null;
+
+    function connect() {
+        ws = new WebSocket('ws://localhost:8080/ws/test-client');
+
+        ws.onopen = function() {
+            addMessage('✅ WebSocket连接成功');
+        };
+
+        ws.onmessage = function(event) {
+            addMessage('📨 收到消息: ' + event.data);
+
+            // 尝试语音播报
+            const data = JSON.parse(event.data);
+            if (data.type === 1) {
+                speak('您有新的订单，订单号：' + data.orderId);
+            }
+        };
+
+        ws.onerror = function(error) {
+            addMessage('❌ WebSocket错误');
+            console.error(error);
+        };
+
+        ws.onclose = function() {
+            addMessage('🔌 WebSocket连接关闭');
+        };
+    }
+
+    function disconnect() {
+        if (ws) {
+            ws.close();
+            ws = null;
+        }
+    }
+
+    function addMessage(msg) {
+        const div = document.createElement('div');
+        div.textContent = msg;
+        document.getElementById('messages').appendChild(div);
+    }
+
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            speechSynthesis.speak(utterance);
+        }
+    }
+</script>
+</body>
+</html>
