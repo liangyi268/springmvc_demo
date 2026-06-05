@@ -421,6 +421,27 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
+    /**
+     * 订单催单
+     * @param id
+     */
+    @Override
+    public void reminder(Long id) {
+       // 查询订单
+       Orders orders = orderMapper.getById(id);
+       // 判断订单是否为待派单状态
+        if (!Objects.equals(orders.getStatus(), Orders.TO_BE_CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        HashMap hashMap = new HashMap();
+        hashMap.put("type",2);//1表示来单提醒2表示客户催单
+        hashMap.put("orderId",id);
+        hashMap.put("content","订单号:"+orders.getNumber());
+        String json = JSON.toJSONString(hashMap);
+        webSocketServer.sendToAllClient(json);//发送消息给客户端
+    }
+
     private String getOrderDishesString(List<OrderDetail> orderDetailList) {
         if (orderDetailList == null || orderDetailList.isEmpty()) {
             return "";

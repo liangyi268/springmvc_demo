@@ -41,4 +41,6 @@ public interface OrderService {
     void complete(Long id);
 
     void paySuccess(String outTradeNo);
+
+    void reminder(Long id);
 }
