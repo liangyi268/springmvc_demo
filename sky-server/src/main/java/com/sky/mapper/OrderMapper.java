@@ -1,6 +1,7 @@
 package com.sky.mapper;
 
 import com.github.pagehelper.Page;
+import com.sky.dto.OrderTurnoverQueryDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import com.sky.vo.OrderStatisticsVO;
@@ -34,4 +35,11 @@ public interface OrderMapper {
 
     @Update("update sky_take_out.orders set status=#{orderStatus},pay_status=#{orderPaidStatus},checkout_time=#{checkOutTime} where number=#{orderNumber}")
     void updateStatus(Integer orderStatus, Integer orderPaidStatus, LocalDateTime checkOutTime, String orderNumber);
+
+    /**
+     * 根据query统计订单数量
+     * @param query
+     * @return
+     */
+    Double sumByMap(OrderTurnoverQueryDTO query);
 }

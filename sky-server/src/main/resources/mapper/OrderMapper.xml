@@ -46,7 +46,9 @@
         where id = #{id}
     </update>
     <select id="getByNumber" resultType="com.sky.entity.Orders">
-        select * from sky_take_out.orders where number =#{orderNumber}
+        select *
+        from sky_take_out.orders
+        where number = #{orderNumber}
     </select>
     <!-- ... existing code ... -->
     <select id="list" resultType="com.sky.entity.Orders">
@@ -74,7 +76,23 @@
         order by order_time desc
     </select>
     <select id="getById" resultType="com.sky.entity.Orders">
-        select * FROM sky_take_out.orders where id=#{id}
+        select *
+        FROM sky_take_out.orders
+        where id = #{id}
+    </select>
+    <select id="sumByMap" resultType="java.lang.Double">
+        SELECT sum(amount) from sky_take_out.orders
+        <where>
+            <if test="startTime!=null">
+                and order_time &gt; #{startTime}
+            </if>
+            <if test="endTime!=null">
+                and order_time &lt; #{endTime}
+            </if>
+            <if test="status!=null">
+                and status =#{status}
+            </if>
+        </where>
     </select>
 
 
