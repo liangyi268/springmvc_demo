@@ -3,10 +3,13 @@ package com.sky.service.impl;
 import com.sky.dto.OrderTurnoverQueryDTO;
 import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
+import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
 import com.sky.vo.TurnoverReportVO;
+import com.sky.vo.UserReportVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,11 +22,11 @@ import java.util.List;
 @Slf4j
 public class ReportServiceImpl implements ReportService {
 
-    private final OrderMapper orderMapper;
+    @Autowired
+    private OrderMapper orderMapper;
 
-    public ReportServiceImpl(OrderMapper orderMapper) {
-        this.orderMapper = orderMapper;
-    }
+    @Autowired
+    private UserMapper userMapper;
 
     /**
      * 营业额统计
@@ -62,6 +65,40 @@ public class ReportServiceImpl implements ReportService {
                 .builder()
                 .dateList(StringUtils.join(dateList, ","))
                 .turnoverList(StringUtils.join(turnoverList, ","))
+                .build();
+    }
+
+    /**
+     * 用户统计
+     * @param begin
+     * @param end
+     * @return
+     */
+    @Override
+    public UserReportVO getUserStatistics(LocalDate begin, LocalDate end) {
+       //存放从begin到end的日期
+       List<LocalDate> dateList = new ArrayList<>();
+       dateList.add(begin);
+       while (!begin.equals(end)) {
+           begin = begin.plusDays(1);
+           dateList.add(begin);
+       }
+       //存放从begin到end的日期对应的用户数量
+        List<Integer> newUserList = new ArrayList<>();
+       //存放从begin到end的日期对应的总用户数量
+        List<Integer> totalUserList = new ArrayList<>();
+        for (LocalDate date : dateList) {
+            LocalDateTime startTime = LocalDateTime.of(date, LocalTime.MIN);
+            LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+            newUserList.add(userMapper.countByDate(startTime, endTime));
+            startTime=null;
+            totalUserList.add(userMapper.countByDate(startTime, endTime));
+        }
+        return UserReportVO
+                .builder()
+                .dateList(StringUtils.join(dateList, ","))
+                .newUserList(StringUtils.join(newUserList, ","))
+                .totalUserList(StringUtils.join(totalUserList, ","))
                 .build();
     }
 }
