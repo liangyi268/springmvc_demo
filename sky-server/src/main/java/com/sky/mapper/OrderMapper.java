@@ -42,4 +42,6 @@ public interface OrderMapper {
      * @return
      */
     Double sumByMap(OrderTurnoverQueryDTO query);
+
+    Integer countByDate(OrderTurnoverQueryDTO query);
 }

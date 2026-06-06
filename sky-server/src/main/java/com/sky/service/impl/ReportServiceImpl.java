@@ -5,6 +5,7 @@ import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
+import com.sky.vo.OrderReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class ReportServiceImpl implements ReportService {
 
     /**
      * 营业额统计
+     *
      * @param begin
      * @param end
      * @return
@@ -70,28 +72,29 @@ public class ReportServiceImpl implements ReportService {
 
     /**
      * 用户统计
+     *
      * @param begin
      * @param end
      * @return
      */
     @Override
     public UserReportVO getUserStatistics(LocalDate begin, LocalDate end) {
-       //存放从begin到end的日期
-       List<LocalDate> dateList = new ArrayList<>();
-       dateList.add(begin);
-       while (!begin.equals(end)) {
-           begin = begin.plusDays(1);
-           dateList.add(begin);
-       }
-       //存放从begin到end的日期对应的用户数量
+        //存放从begin到end的日期
+        List<LocalDate> dateList = new ArrayList<>();
+        dateList.add(begin);
+        while (!begin.equals(end)) {
+            begin = begin.plusDays(1);
+            dateList.add(begin);
+        }
+        //存放从begin到end的日期对应的用户数量
         List<Integer> newUserList = new ArrayList<>();
-       //存放从begin到end的日期对应的总用户数量
+        //存放从begin到end的日期对应的总用户数量
         List<Integer> totalUserList = new ArrayList<>();
         for (LocalDate date : dateList) {
             LocalDateTime startTime = LocalDateTime.of(date, LocalTime.MIN);
             LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
             newUserList.add(userMapper.countByDate(startTime, endTime));
-            startTime=null;
+            startTime = null;
             totalUserList.add(userMapper.countByDate(startTime, endTime));
         }
         return UserReportVO
@@ -99,6 +102,47 @@ public class ReportServiceImpl implements ReportService {
                 .dateList(StringUtils.join(dateList, ","))
                 .newUserList(StringUtils.join(newUserList, ","))
                 .totalUserList(StringUtils.join(totalUserList, ","))
+                .build();
+    }
+
+    @Override
+    public OrderReportVO getOrdersStatistics(LocalDate begin, LocalDate end) {
+        log.info("订单统计：{}到{}", begin, end);
+        List<LocalDate> dateList = new ArrayList<>();
+        dateList.add(begin);
+        while (!begin.equals(end)) {
+            begin = begin.plusDays(1);
+            dateList.add(begin);
+        }
+        List<Integer> orderCountList = new ArrayList<>();
+        List<Integer> validOrderCountList = new ArrayList<>();
+        for (LocalDate date : dateList) {
+            //查询订单总数
+            LocalDateTime startTime = LocalDateTime.of(date, LocalTime.MIN);
+            LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+            OrderTurnoverQueryDTO query = OrderTurnoverQueryDTO
+                    .builder()
+                    .startTime(startTime)
+                    .endTime(endTime)
+                    .build();
+            Integer count = orderMapper.countByDate(query);
+            orderCountList.add(count);
+            //查询有效订单数
+            query.setStatus(Orders.COMPLETED);
+            count = orderMapper.countByDate(query);
+            validOrderCountList.add(count);
+        }
+        Integer totalOrderCount = orderCountList.stream().reduce(Integer::sum).get();
+        Integer validOrderCount = validOrderCountList.stream().reduce(Integer::sum).get();
+        double orderCompletionRate =  totalOrderCount == 0 ? 0.0 : validOrderCount * 1.0 / totalOrderCount;
+        return OrderReportVO
+                .builder()
+                .dateList(StringUtils.join(dateList, ","))
+                .orderCountList(StringUtils.join(orderCountList, ","))
+                .validOrderCountList(StringUtils.join(validOrderCountList, ","))
+                .totalOrderCount(totalOrderCount)
+                .validOrderCount(validOrderCount)
+                .orderCompletionRate(orderCompletionRate)
                 .build();
     }
 }
