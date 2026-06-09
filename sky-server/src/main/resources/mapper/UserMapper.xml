@@ -8,13 +8,13 @@
         values (#{openid}, #{name}, #{phone}, #{sex}, #{idNumber}, #{avatar}, #{createTime})
     </insert>
     <select id="countByDate" resultType="java.lang.Integer">
-        SELECT count(id) from sky_take_out.orders
+        SELECT count(id) from sky_take_out.user
         <where>
             <if test="startTime != null">
-                and order_time &gt;= #{startTime}
+                and create_time &gt; #{startTime}
             </if>
             <if test="endTime != null">
-                and order_time &lt;= #{endTime}
+                and create_time &lt; #{endTime}
             </if>
         </where>
     </select>

@@ -36,4 +36,6 @@ public interface SetmealMapper {
     void update(Setmeal setmeal);
 
     List<Setmeal> list(Setmeal setmeal);
+
+    Integer countByStatus(Integer enable);
 }

@@ -27,6 +27,11 @@ public interface OrderMapper {
     Page<Orders> list(OrdersPageQueryDTO ordersPageQueryDTO);
 
     Orders getById(Long id);
+
+    /**
+     * 查询订单列表
+     * @return
+     */
     @Select("select * from orders")
     List<Orders> ordersList();
 
@@ -44,4 +49,8 @@ public interface OrderMapper {
     Double sumByMap(OrderTurnoverQueryDTO query);
 
     Integer countByDate(OrderTurnoverQueryDTO query);
+
+    List<Orders> getOrders(OrderTurnoverQueryDTO query);
+
+    Integer countByStatus(Integer status);
 }

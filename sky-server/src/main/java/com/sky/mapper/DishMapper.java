@@ -60,4 +60,6 @@ public interface DishMapper {
      * @return
      */
     List<DishVO> list(Dish dish);
+
+    Integer countByStatus(Integer enable);
 }
