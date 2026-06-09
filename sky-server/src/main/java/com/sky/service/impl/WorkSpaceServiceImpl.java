@@ -33,10 +33,7 @@ public class WorkSpaceServiceImpl implements WorkSpaceService {
     private SetmealMapper setmealMapper;
 
     @Override
-    public BusinessDataVO getBusinessData() {
-        LocalDateTime localDateTime = LocalDateTime.now();
-        LocalDateTime begin = localDateTime.withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime end = localDateTime.withHour(23).withMinute(59).withSecond(59);
+    public BusinessDataVO getBusinessData(LocalDateTime begin, LocalDateTime end) {
         OrderTurnoverQueryDTO queryDTO = OrderTurnoverQueryDTO
                 .builder()
                 .startTime(begin)
@@ -48,15 +45,18 @@ public class WorkSpaceServiceImpl implements WorkSpaceService {
         queryDTO.setStatus(null);
         Integer orderCount = orderMapper.countByDate(queryDTO);
         Double unitPrice = validOrderCount == 0 ? 0.0 : turnover / validOrderCount;
+        double orderCompletionRate = orderCount == 0 ? 0.0 : validOrderCount.doubleValue() / orderCount;
+
         return BusinessDataVO
                 .builder()
-                .turnover(turnover)
-                .validOrderCount(validOrderCount)
-                .orderCompletionRate(validOrderCount.doubleValue() / orderCount)
-                .unitPrice(unitPrice)
-                .newUsers(userMapper.countByDate(begin, end))
+                .turnover(turnover != null ? turnover : 0.0)
+                .validOrderCount(validOrderCount != null ? validOrderCount : 0)
+                .orderCompletionRate(orderCompletionRate)
+                .unitPrice(unitPrice != null ? unitPrice : 0.0)
+                .newUsers(userMapper.countByDate(begin, end) != null ? userMapper.countByDate(begin, end) : 0)
                 .build();
     }
+
 
     @Override
     public OrderOverViewVO getOrderOverView() {
